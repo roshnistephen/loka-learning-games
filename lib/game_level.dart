@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:audioplayers/audioplayers.dart';
+import 'dart:async';
 
 class GameLevelPage extends StatefulWidget {
   final String levelName;
@@ -27,7 +28,9 @@ class _GameLevelPageState extends State<GameLevelPage> {
     slots = List<String?>.filled(letters.length, null);
     available = List<String>.from(letters)..shuffle(Random());
     slotWrong = List<bool>.filled(letters.length, false);
-    _player.play(AssetSource('levels/${widget.levelName}.mp3'));
+    Future.delayed(Duration(seconds: 1), () {
+      _player.play(AssetSource('levels/${widget.levelName}.mp3'));
+    });
     _loadLevels();
   }
 
