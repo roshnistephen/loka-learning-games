@@ -36,8 +36,9 @@ class _GameLevelPageState extends State<GameLevelPage> {
       final s = await rootBundle.loadString('assets/levels/levels.json');
       final d = jsonDecode(s);
       if (d is List) _levels = d.map((e) => e.toString()).toList();
-      if (d is Map && d['levels'] is List)
+      if (d is Map && d['levels'] is List) {
         _levels = (d['levels'] as List).map((e) => e.toString()).toList();
+      }
     } catch (_) {}
   }
 
@@ -194,11 +195,12 @@ class _GameLevelPageState extends State<GameLevelPage> {
                               },
                               onDragCompleted: () => _dragFromSlotIndex = -1,
                               onDraggableCanceled: (_, __) {
-                                if (mounted)
+                                if (mounted) {
                                   setState(() {
                                     slots[i] = occupied;
                                     _dragFromSlotIndex = -1;
                                   });
+                                }
                               },
                             ),
                     );

@@ -65,11 +65,13 @@ class _LevelsPageState extends State<LevelsPage> {
       body: FutureBuilder<List<String>>(
         future: _levelsFuture,
         builder: (context, snap) {
-          if (snap.connectionState == ConnectionState.waiting)
+          if (snap.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
+          }
           final levels = snap.data ?? [];
-          if (levels.isEmpty)
+          if (levels.isEmpty) {
             return const Center(child: Text('No levels found.'));
+          }
           return ListView.separated(
             itemCount: levels.length,
             separatorBuilder: (_, __) => const Divider(height: 1),
