@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:audioplayers/audioplayers.dart';
-import 'package:confetti/confetti.dart'; // 🎉 added
+import 'package:confetti/confetti.dart';
 import 'dart:async';
 
 class GameLevelPage extends StatefulWidget {
@@ -14,7 +14,9 @@ class GameLevelPage extends StatefulWidget {
 }
 
 class _GameLevelPageState extends State<GameLevelPage> {
-  final AudioPlayer _player = AudioPlayer();
+  final AudioPlayer _player = AudioPlayer(); // word audio
+  final AudioPlayer _sfxPlayer = AudioPlayer(); // 🎶 success sound
+
   late final List<String> letters;
   late List<String?> slots;
   late List<String> available;
@@ -37,7 +39,7 @@ class _GameLevelPageState extends State<GameLevelPage> {
       duration: const Duration(seconds: 1),
     );
 
-    Future.delayed(Duration(seconds: 1), () {
+    Future.delayed(const Duration(seconds: 1), () {
       _player.play(AssetSource('levels/${widget.levelName}.mp3'));
     });
     _loadLevels();
@@ -57,7 +59,8 @@ class _GameLevelPageState extends State<GameLevelPage> {
   @override
   void dispose() {
     _player.dispose();
-    _confettiController.dispose(); // 🎉 dispose controller
+    _sfxPlayer.dispose(); // 🎶 dispose success sound player
+    _confettiController.dispose();
     super.dispose();
   }
 
@@ -89,8 +92,9 @@ class _GameLevelPageState extends State<GameLevelPage> {
       if (slots[i] != letters[i]) return;
     }
 
-    // 🎉 Play confetti when completed
+    // 🎉 Confetti + Success sound
     _confettiController.play();
+    _sfxPlayer.play(AssetSource('sounds/success.mp3'));
 
     Future.delayed(const Duration(milliseconds: 800), () async {
       await _player.stop();
