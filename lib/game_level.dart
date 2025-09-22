@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:audioplayers/audioplayers.dart';
 import 'package:confetti/confetti.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // ⭐ added
 import 'dart:async';
 
 class GameLevelPage extends StatefulWidget {
@@ -14,17 +15,18 @@ class GameLevelPage extends StatefulWidget {
 }
 
 class _GameLevelPageState extends State<GameLevelPage> {
-  final AudioPlayer _player = AudioPlayer(); // word audio
-  final AudioPlayer _sfxPlayer = AudioPlayer(); // 🎶 success sound
+  final AudioPlayer _player = AudioPlayer();
+  final AudioPlayer _sfxPlayer = AudioPlayer();
 
   late final List<String> letters;
   late List<String?> slots;
   late List<String> available;
   late List<bool> slotWrong;
   int _dragFromSlotIndex = -1;
+  int _mistakes = 0; // ⭐ count mistakes
+  final Stopwatch _stopwatch = Stopwatch(); // ⏱️ track time
   List<String> _levels = [];
 
-  // 🎉 Confetti controller
   late ConfettiController _confettiController;
 
   @override
@@ -42,6 +44,7 @@ class _GameLevelPageState extends State<GameLevelPage> {
     Future.delayed(const Duration(seconds: 1), () {
       _player.play(AssetSource('levels/${widget.levelName}.mp3'));
     });
+    _stopwatch.start(); // ⭐ start timer
     _loadLevels();
   }
 
@@ -59,8 +62,9 @@ class _GameLevelPageState extends State<GameLevelPage> {
   @override
   void dispose() {
     _player.dispose();
-    _sfxPlayer.dispose(); // 🎶 dispose success sound player
+    _sfxPlayer.dispose();
     _confettiController.dispose();
+    _stopwatch.stop();
     super.dispose();
   }
 
@@ -75,6 +79,7 @@ class _GameLevelPageState extends State<GameLevelPage> {
       });
       _checkComplete();
     } else {
+      _mistakes++; // ⭐ count mistake
       setState(() => slotWrong[slotIndex] = true);
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted) setState(() => slotWrong[slotIndex] = false);
@@ -87,34 +92,67 @@ class _GameLevelPageState extends State<GameLevelPage> {
     }
   }
 
-  void _checkComplete() {
+  Future<void> _checkComplete() async {
     for (int i = 0; i < letters.length; i++) {
       if (slots[i] != letters[i]) return;
     }
 
-    // 🎉 Confetti + Success sound
+    // 🎉 Confetti + Sound
     _confettiController.play();
     _sfxPlayer.play(AssetSource('sounds/success.mp3'));
 
-    Future.delayed(const Duration(milliseconds: 800), () async {
-      await _player.stop();
-      if (!mounted) return;
-      final idx = _levels.indexOf(widget.levelName);
-      if (idx == -1 || _levels.isEmpty) {
-        if (!mounted) return;
-        showDialog(
-          context: context,
-          builder: (_) => AlertDialog(content: const Text('Great Job!')),
-        );
-        return;
-      }
-      final next = _levels[(idx + 1) % _levels.length];
-      if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => GameLevelPage(levelName: next)),
-      );
-    });
+    _stopwatch.stop(); // stop timer
+    final seconds = _stopwatch.elapsed.inSeconds;
+
+    // ⭐ Star logic
+    int stars = 1;
+    if (_mistakes == 0 && seconds < 20) {
+      stars = 3;
+    } else if (_mistakes <= 2 && seconds < 40) {
+      stars = 2;
+    }
+
+    // 💾 Save stars in SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setInt("stars_${widget.levelName}", stars);
+
+    // ⭐ Show popup with stars
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Great Job!"),
+        content: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(3, (i) {
+            return Icon(
+              i < stars ? Icons.star : Icons.star_border,
+              color: Colors.amber,
+              size: 36,
+            );
+          }),
+        ),
+        actions: [
+          TextButton(
+            child: const Text("Next"),
+            onPressed: () {
+              Navigator.of(context).pop();
+              _goToNextLevel();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _goToNextLevel() {
+    final idx = _levels.indexOf(widget.levelName);
+    if (idx == -1 || _levels.isEmpty) return;
+    final next = _levels[(idx + 1) % _levels.length];
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => GameLevelPage(levelName: next)),
+    );
   }
 
   Widget _tile(String text, Color color) {
@@ -239,12 +277,11 @@ class _GameLevelPageState extends State<GameLevelPage> {
               ),
             ],
           ),
-          // 🎉 Confetti overlay
           Align(
             alignment: Alignment.topCenter,
             child: ConfettiWidget(
               confettiController: _confettiController,
-              blastDirection: pi / 2, // downward
+              blastDirection: pi / 2,
               emissionFrequency: 0.05,
               numberOfParticles: 20,
               gravity: 0.4,
