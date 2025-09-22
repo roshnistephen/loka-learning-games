@@ -2,6 +2,7 @@ name: loka_word_builder
 description: "A new Flutter project."
 publish_to: "none"
 version: 1.0.0+1
+
 environment:
   sdk: ^3.9.2
 
@@ -21,8 +22,20 @@ dev_dependencies:
 
   flutter_lints: ^5.0.0
 
+  flutter_launcher_icons: ^0.13.1
+
 flutter:
   uses-material-design: true
   assets:
     - assets/
     - assets/levels/
+    - assets/icon/
+
+flutter_launcher_name:
+  name: "Loka Word Builder"
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+  min_sdk_android: 21
