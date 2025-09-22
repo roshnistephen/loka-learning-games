@@ -1,3 +1,20 @@
 {
-  "levels": ["cat", "dog", "hat", "tree"]
+  "levels": [
+    "bag",
+    "bat",
+    "bird",
+    "boy",
+    "car",
+    "cat",
+    "cow",
+    "dog",
+    "fish",
+    "girl",
+    "hat",
+    "map",
+    "pen",
+    "sun",
+    "ten",
+    "tree"
+  ]
 }
