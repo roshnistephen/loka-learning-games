@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:audioplayers/audioplayers.dart';
 import 'package:confetti/confetti.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // ⭐ added
-import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class GameLevelPage extends StatefulWidget {
   final String levelName;
@@ -17,17 +17,17 @@ class GameLevelPage extends StatefulWidget {
 class _GameLevelPageState extends State<GameLevelPage> {
   final AudioPlayer _player = AudioPlayer();
   final AudioPlayer _sfxPlayer = AudioPlayer();
-
   late final List<String> letters;
   late List<String?> slots;
   late List<String> available;
   late List<bool> slotWrong;
   int _dragFromSlotIndex = -1;
-  int _mistakes = 0; // ⭐ count mistakes
-  final Stopwatch _stopwatch = Stopwatch(); // ⏱️ track time
+  int _mistakes = 0;
+  final Stopwatch _stopwatch = Stopwatch();
   List<String> _levels = [];
-
   late ConfettiController _confettiController;
+  bool _showHint = false;
+  Timer? _hintTimer;
 
   @override
   void initState() {
@@ -36,16 +36,15 @@ class _GameLevelPageState extends State<GameLevelPage> {
     slots = List<String?>.filled(letters.length, null);
     available = List<String>.from(letters)..shuffle(Random());
     slotWrong = List<bool>.filled(letters.length, false);
-
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 1),
     );
-
-    Future.delayed(const Duration(seconds: 1), () {
+    Future.delayed(const Duration(milliseconds: 300), () {
       _player.play(AssetSource('levels/${widget.levelName}.mp3'));
     });
-    _stopwatch.start(); // ⭐ start timer
+    _stopwatch.start();
     _loadLevels();
+    Future.delayed(const Duration(milliseconds: 400), showHintTemporarily);
   }
 
   Future<void> _loadLevels() async {
@@ -65,7 +64,16 @@ class _GameLevelPageState extends State<GameLevelPage> {
     _sfxPlayer.dispose();
     _confettiController.dispose();
     _stopwatch.stop();
+    _hintTimer?.cancel();
     super.dispose();
+  }
+
+  void showHintTemporarily() {
+    _hintTimer?.cancel();
+    setState(() => _showHint = true);
+    _hintTimer = Timer(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _showHint = false);
+    });
   }
 
   void _onAccept(int slotIndex, String data) {
@@ -79,7 +87,7 @@ class _GameLevelPageState extends State<GameLevelPage> {
       });
       _checkComplete();
     } else {
-      _mistakes++; // ⭐ count mistake
+      _mistakes++;
       setState(() => slotWrong[slotIndex] = true);
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted) setState(() => slotWrong[slotIndex] = false);
@@ -96,27 +104,18 @@ class _GameLevelPageState extends State<GameLevelPage> {
     for (int i = 0; i < letters.length; i++) {
       if (slots[i] != letters[i]) return;
     }
-
-    // 🎉 Confetti + Sound
     _confettiController.play();
     _sfxPlayer.play(AssetSource('sounds/success.mp3'));
-
-    _stopwatch.stop(); // stop timer
+    _stopwatch.stop();
     final seconds = _stopwatch.elapsed.inSeconds;
-
-    // ⭐ Star logic
     int stars = 1;
     if (_mistakes == 0 && seconds < 20) {
       stars = 3;
     } else if (_mistakes <= 2 && seconds < 40) {
       stars = 2;
     }
-
-    // 💾 Save stars in SharedPreferences
     final prefs = await SharedPreferences.getInstance();
     prefs.setInt("stars_${widget.levelName}", stars);
-
-    // ⭐ Show popup with stars
     if (!mounted) return;
     showDialog(
       context: context,
@@ -176,6 +175,80 @@ class _GameLevelPageState extends State<GameLevelPage> {
     );
   }
 
+  Widget _buildDraggableTile(String letter) {
+    return Draggable<String>(
+      data: letter,
+      feedback: _tile(letter, Colors.blueAccent),
+      childWhenDragging: Opacity(
+        opacity: 0.25,
+        child: _tile(letter, Colors.deepOrange),
+      ),
+      child: _tile(letter, Colors.deepOrange),
+      onDragStarted: () => _dragFromSlotIndex = -1,
+    );
+  }
+
+  Widget _buildPlacedDraggable(int i, String occupied) {
+    return Draggable<String>(
+      data: occupied,
+      feedback: _tile(occupied, Colors.green),
+      childWhenDragging: const SizedBox.shrink(),
+      child: _tile(occupied, Colors.green),
+      onDragStarted: () {
+        _dragFromSlotIndex = i;
+        setState(() => slots[i] = null);
+      },
+      onDragCompleted: () => _dragFromSlotIndex = -1,
+      onDraggableCanceled: (_, __) {
+        if (mounted)
+          setState(() {
+            slots[i] = occupied;
+            _dragFromSlotIndex = -1;
+          });
+      },
+    );
+  }
+
+  Widget _buildSlot(int i) {
+    final occupied = slots[i];
+    final baseColor = occupied != null
+        ? Colors.green
+        : (slotWrong[i] ? Colors.red : Colors.grey.shade200);
+    return DragTarget<String>(
+      builder: (context, incoming, rejected) {
+        final color = baseColor;
+        final display = occupied ?? (_showHint ? letters[i] : null);
+        final faded = occupied == null && _showHint;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          width: 72,
+          height: 72,
+          margin: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.black12),
+          ),
+          alignment: Alignment.center,
+          child: display == null
+              ? const SizedBox.shrink()
+              : displayWidget(display, faded),
+        );
+      },
+      onWillAccept: (d) => slots[i] == null,
+      onAccept: (data) => setState(() => _onAccept(i, data)),
+    );
+  }
+
+  Widget displayWidget(String text, bool faded) {
+    final style = TextStyle(
+      color: faded ? Colors.white.withOpacity(0.6) : Colors.white,
+      fontSize: 26,
+      fontWeight: FontWeight.bold,
+    );
+    return Text(text, style: style);
+  }
+
   @override
   Widget build(BuildContext context) {
     final imagePath = 'assets/levels/${widget.levelName}.jpg';
@@ -188,6 +261,10 @@ class _GameLevelPageState extends State<GameLevelPage> {
         foregroundColor: Colors.black87,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.lightbulb, color: Colors.black87),
+            onPressed: showHintTemporarily,
+          ),
           IconButton(
             icon: const Icon(Icons.volume_up, color: Colors.black87),
             onPressed: () =>
@@ -202,77 +279,34 @@ class _GameLevelPageState extends State<GameLevelPage> {
               SizedBox(
                 height: media.height * 0.34,
                 width: double.infinity,
-                child: Image.asset(imagePath, fit: BoxFit.contain),
+                child: Image.asset(
+                  imagePath,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => Center(
+                    child: Text(
+                      '[image missing: $imagePath]',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Color(0xFF555555),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(height: 8),
               Wrap(
                 alignment: WrapAlignment.center,
-                children: available.map((letter) {
-                  return Draggable<String>(
-                    data: letter,
-                    feedback: _tile(letter, Colors.blueAccent),
-                    childWhenDragging: Opacity(
-                      opacity: 0.25,
-                      child: _tile(letter, Colors.deepOrange),
-                    ),
-                    child: _tile(letter, Colors.deepOrange),
-                    onDragStarted: () => _dragFromSlotIndex = -1,
-                  );
-                }).toList(),
+                children: available
+                    .map((letter) => _buildDraggableTile(letter))
+                    .toList(),
               ),
               const Spacer(),
               Padding(
                 padding: const EdgeInsets.only(bottom: 24),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(letters.length, (i) {
-                    return DragTarget<String>(
-                      builder: (context, incoming, rejected) {
-                        final occupied = slots[i];
-                        final color = occupied != null
-                            ? Colors.green
-                            : (slotWrong[i]
-                                  ? Colors.red
-                                  : Colors.grey.shade200);
-                        return AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          width: 72,
-                          height: 72,
-                          margin: const EdgeInsets.symmetric(horizontal: 8),
-                          decoration: BoxDecoration(
-                            color: color,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.black12),
-                          ),
-                          alignment: Alignment.center,
-                          child: occupied == null
-                              ? const SizedBox.shrink()
-                              : Draggable<String>(
-                                  data: occupied,
-                                  feedback: _tile(occupied, Colors.green),
-                                  childWhenDragging: const SizedBox.shrink(),
-                                  child: _tile(occupied, Colors.green),
-                                  onDragStarted: () {
-                                    _dragFromSlotIndex = i;
-                                    setState(() => slots[i] = null);
-                                  },
-                                  onDragCompleted: () =>
-                                      _dragFromSlotIndex = -1,
-                                  onDraggableCanceled: (_, __) {
-                                    if (mounted) {
-                                      setState(() {
-                                        slots[i] = occupied;
-                                        _dragFromSlotIndex = -1;
-                                      });
-                                    }
-                                  },
-                                ),
-                        );
-                      },
-                      onWillAccept: (d) => slots[i] == null,
-                      onAccept: (data) => setState(() => _onAccept(i, data)),
-                    );
-                  }),
+                  children: List.generate(letters.length, (i) => _buildSlot(i)),
                 ),
               ),
             ],
