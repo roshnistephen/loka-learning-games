@@ -242,7 +242,7 @@ class _GameLevelPageState extends State<GameLevelPage> {
 
   Widget displayWidget(String text, bool faded) {
     final style = TextStyle(
-      color: faded ? Colors.white.withOpacity(0.6) : Colors.white,
+      color: faded ? Colors.red.withOpacity(0.9) : Colors.white,
       fontSize: 26,
       fontWeight: FontWeight.bold,
     );
