@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:audioplayers/audioplayers.dart';
+import 'package:confetti/confetti.dart'; // 🎉 added
 import 'dart:async';
 
 class GameLevelPage extends StatefulWidget {
@@ -21,6 +22,9 @@ class _GameLevelPageState extends State<GameLevelPage> {
   int _dragFromSlotIndex = -1;
   List<String> _levels = [];
 
+  // 🎉 Confetti controller
+  late ConfettiController _confettiController;
+
   @override
   void initState() {
     super.initState();
@@ -28,6 +32,11 @@ class _GameLevelPageState extends State<GameLevelPage> {
     slots = List<String?>.filled(letters.length, null);
     available = List<String>.from(letters)..shuffle(Random());
     slotWrong = List<bool>.filled(letters.length, false);
+
+    _confettiController = ConfettiController(
+      duration: const Duration(seconds: 1),
+    );
+
     Future.delayed(Duration(seconds: 1), () {
       _player.play(AssetSource('levels/${widget.levelName}.mp3'));
     });
@@ -48,6 +57,7 @@ class _GameLevelPageState extends State<GameLevelPage> {
   @override
   void dispose() {
     _player.dispose();
+    _confettiController.dispose(); // 🎉 dispose controller
     super.dispose();
   }
 
@@ -78,6 +88,10 @@ class _GameLevelPageState extends State<GameLevelPage> {
     for (int i = 0; i < letters.length; i++) {
       if (slots[i] != letters[i]) return;
     }
+
+    // 🎉 Play confetti when completed
+    _confettiController.play();
+
     Future.delayed(const Duration(milliseconds: 800), () async {
       await _player.stop();
       if (!mounted) return;
@@ -139,79 +153,97 @@ class _GameLevelPageState extends State<GameLevelPage> {
           ),
         ],
       ),
-      body: Column(
+      body: Stack(
         children: [
-          SizedBox(
-            height: media.height * 0.34,
-            width: double.infinity,
-            child: Image.asset(imagePath, fit: BoxFit.contain),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            alignment: WrapAlignment.center,
-            children: available.map((letter) {
-              return Draggable<String>(
-                data: letter,
-                feedback: _tile(letter, Colors.blueAccent),
-                childWhenDragging: Opacity(
-                  opacity: 0.25,
-                  child: _tile(letter, Colors.deepOrange),
-                ),
-                child: _tile(letter, Colors.deepOrange),
-                onDragStarted: () => _dragFromSlotIndex = -1,
-              );
-            }).toList(),
-          ),
-          const Spacer(),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 24),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(letters.length, (i) {
-                return DragTarget<String>(
-                  builder: (context, incoming, rejected) {
-                    final occupied = slots[i];
-                    final color = occupied != null
-                        ? Colors.green
-                        : (slotWrong[i] ? Colors.red : Colors.grey.shade200);
-                    return AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      width: 72,
-                      height: 72,
-                      margin: const EdgeInsets.symmetric(horizontal: 8),
-                      decoration: BoxDecoration(
-                        color: color,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.black12),
-                      ),
-                      alignment: Alignment.center,
-                      child: occupied == null
-                          ? const SizedBox.shrink()
-                          : Draggable<String>(
-                              data: occupied,
-                              feedback: _tile(occupied, Colors.green),
-                              childWhenDragging: const SizedBox.shrink(),
-                              child: _tile(occupied, Colors.green),
-                              onDragStarted: () {
-                                _dragFromSlotIndex = i;
-                                setState(() => slots[i] = null);
-                              },
-                              onDragCompleted: () => _dragFromSlotIndex = -1,
-                              onDraggableCanceled: (_, __) {
-                                if (mounted) {
-                                  setState(() {
-                                    slots[i] = occupied;
-                                    _dragFromSlotIndex = -1;
-                                  });
-                                }
-                              },
-                            ),
+          Column(
+            children: [
+              SizedBox(
+                height: media.height * 0.34,
+                width: double.infinity,
+                child: Image.asset(imagePath, fit: BoxFit.contain),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                alignment: WrapAlignment.center,
+                children: available.map((letter) {
+                  return Draggable<String>(
+                    data: letter,
+                    feedback: _tile(letter, Colors.blueAccent),
+                    childWhenDragging: Opacity(
+                      opacity: 0.25,
+                      child: _tile(letter, Colors.deepOrange),
+                    ),
+                    child: _tile(letter, Colors.deepOrange),
+                    onDragStarted: () => _dragFromSlotIndex = -1,
+                  );
+                }).toList(),
+              ),
+              const Spacer(),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(letters.length, (i) {
+                    return DragTarget<String>(
+                      builder: (context, incoming, rejected) {
+                        final occupied = slots[i];
+                        final color = occupied != null
+                            ? Colors.green
+                            : (slotWrong[i]
+                                  ? Colors.red
+                                  : Colors.grey.shade200);
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          width: 72,
+                          height: 72,
+                          margin: const EdgeInsets.symmetric(horizontal: 8),
+                          decoration: BoxDecoration(
+                            color: color,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.black12),
+                          ),
+                          alignment: Alignment.center,
+                          child: occupied == null
+                              ? const SizedBox.shrink()
+                              : Draggable<String>(
+                                  data: occupied,
+                                  feedback: _tile(occupied, Colors.green),
+                                  childWhenDragging: const SizedBox.shrink(),
+                                  child: _tile(occupied, Colors.green),
+                                  onDragStarted: () {
+                                    _dragFromSlotIndex = i;
+                                    setState(() => slots[i] = null);
+                                  },
+                                  onDragCompleted: () =>
+                                      _dragFromSlotIndex = -1,
+                                  onDraggableCanceled: (_, __) {
+                                    if (mounted) {
+                                      setState(() {
+                                        slots[i] = occupied;
+                                        _dragFromSlotIndex = -1;
+                                      });
+                                    }
+                                  },
+                                ),
+                        );
+                      },
+                      onWillAccept: (d) => slots[i] == null,
+                      onAccept: (data) => setState(() => _onAccept(i, data)),
                     );
-                  },
-                  onWillAccept: (d) => slots[i] == null,
-                  onAccept: (data) => setState(() => _onAccept(i, data)),
-                );
-              }),
+                  }),
+                ),
+              ),
+            ],
+          ),
+          // 🎉 Confetti overlay
+          Align(
+            alignment: Alignment.topCenter,
+            child: ConfettiWidget(
+              confettiController: _confettiController,
+              blastDirection: pi / 2, // downward
+              emissionFrequency: 0.05,
+              numberOfParticles: 20,
+              gravity: 0.4,
             ),
           ),
         ],
