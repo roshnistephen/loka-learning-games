@@ -57,10 +57,16 @@ class _LevelsPageState extends State<LevelsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Levels'),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black87,
         elevation: 0,
+        title: Row(
+          children: [
+            Image.asset('assets/icon/app_icon.png', width: 32, height: 32),
+            const SizedBox(width: 8),
+            const Text('Levels'),
+          ],
+        ),
       ),
       body: FutureBuilder<List<String>>(
         future: _levelsFuture,
