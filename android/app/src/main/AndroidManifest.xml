@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="loka_word_builder"
+        android:label="Loka Word Builder"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
