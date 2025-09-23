@@ -16,6 +16,12 @@ class GamesListPlaceholder extends StatelessWidget {
       color: Color(0xFFFFA8D9),
       icon: Icons.abc,
     ),
+    _Game(
+      title: 'Plank Game',
+      route: '/plank-game',
+      color: Color(0x0FFFA8D9),
+      icon: Icons.abc_sharp,
+    ),
   ];
 
   @override

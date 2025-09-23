@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:loka_word_builder/games/plank_tower/plank_tower_page.dart';
 import 'games_list.dart';
 import 'games/baloon_game/baloon_game_page.dart';
 import 'main_welcome.dart';
@@ -19,6 +20,7 @@ class LokaApp extends StatelessWidget {
         '/games': (ctx) => const GamesListPlaceholder(),
         '/baloon-game': (ctx) => BalloonGamePage(),
         '/letter-game': (ctx) => LetterScreen(),
+        '/plank-game': (ctx) => PlankTowerPage(),
       },
       initialRoute: '/',
     );
