@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'games_list.dart';
-import 'games/ball_physics_game/ball_game_page.dart';
+import 'games/baloon_game/baloon_game_page.dart';
 import 'main_welcome.dart';
+import 'games/letter_screen_game/letter_screen_game_page.dart';
 
 void main() => runApp(const LokaApp());
 
@@ -16,7 +17,8 @@ class LokaApp extends StatelessWidget {
       routes: {
         '/': (ctx) => const WelcomePage(),
         '/games': (ctx) => const GamesListPlaceholder(),
-        '/play-ball-game': (ctx) => BalloonGamePage(), // ✅ fixed
+        '/baloon-game': (ctx) => BalloonGamePage(),
+        '/letter-game': (ctx) => LetterScreen(),
       },
       initialRoute: '/',
     );
