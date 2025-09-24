@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:loka_word_builder/games/plank_tower/plank_tower_page.dart';
 import 'games_list.dart';
 import 'games/baloon_game/baloon_game_page.dart';
-import 'main_welcome.dart';
 import 'games/letter_screen_game/letter_screen_game_page.dart';
+import 'games/plank_tower/plank_tower_page.dart';
 import 'games/counting_flashcard/counting_flashcard_page.dart';
+import 'games/animal_families/animal_families_page.dart';
+import 'main_welcome.dart';
 
 void main() => runApp(const LokaApp());
 
@@ -19,10 +20,11 @@ class LokaApp extends StatelessWidget {
       routes: {
         '/': (ctx) => const WelcomePage(),
         '/games': (ctx) => const GamesListPlaceholder(),
-        '/baloon-game': (ctx) => BalloonGamePage(),
+        '/baloon-game': (ctx) => const BalloonGamePage(),
         '/letter-game': (ctx) => LetterScreen(),
-        '/plank-game': (ctx) => PlankTowerPage(),
+        '/plank-game': (ctx) => const PlankTowerPage(),
         '/counting-flashcard': (ctx) => const CountingFlashcardPage(),
+        '/animal-families': (ctx) => const AnimalFamiliesPage(),
       },
       initialRoute: '/',
     );

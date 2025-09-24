@@ -19,21 +19,34 @@ class GamesListPlaceholder extends StatelessWidget {
     _Game(
       title: 'Plank Game',
       route: '/plank-game',
-      color: Color(0x0FFFA8D9),
+      color: Color(0xFFFFD54F),
       icon: Icons.abc_sharp,
     ),
     _Game(
-      title: 'Counting Flashcards',
+      title: 'Counting',
       route: '/counting-flashcard',
       color: Color(0xFFB39DDB),
       icon: Icons.calculate,
+    ),
+    _Game(
+      title: 'Animal Families',
+      route: '/animal-families',
+      color: Color(0xFF81C784),
+      icon: Icons.pets,
     ),
   ];
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final tileWidth = (width * 0.46) > 160 ? 160.0 : (width * 0.46);
+    final horizontalPadding = 16.0;
+    final spacing = 12.0;
+    final crossAxisCount = width < 420
+        ? 2
+        : width < 800
+        ? 3
+        : 4;
+    final childAspectRatio = 3 / 2;
 
     return Scaffold(
       appBar: AppBar(
@@ -42,32 +55,24 @@ class GamesListPlaceholder extends StatelessWidget {
         elevation: 0,
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 160,
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                scrollDirection: Axis.horizontal,
-                itemCount: _games.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 12),
-                itemBuilder: (context, index) {
-                  final game = _games[index];
-                  return _GameTile(game: game, width: tileWidth);
-                },
-              ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: horizontalPadding,
+            vertical: 16,
+          ),
+          child: GridView.builder(
+            itemCount: _games.length,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              crossAxisSpacing: spacing,
+              mainAxisSpacing: spacing,
+              childAspectRatio: childAspectRatio,
             ),
-            const SizedBox(height: 18),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                'Choose a game and have fun!',
-                style: Theme.of(context).textTheme.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ],
+            itemBuilder: (context, index) {
+              final game = _games[index];
+              return _GameTile(game: game);
+            },
+          ),
         ),
       ),
     );
@@ -89,47 +94,45 @@ class _Game {
 
 class _GameTile extends StatelessWidget {
   final _Game game;
-  final double width;
-  const _GameTile({required this.game, required this.width, super.key});
+  const _GameTile({required this.game, super.key});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: width,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(14),
-          onTap: () => Navigator.of(context).pushNamed(game.route),
-          child: Ink(
-            decoration: BoxDecoration(
-              color: game.color,
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => Navigator.of(context).pushNamed(game.route),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: game.color,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(game.icon, size: 44, color: Colors.white),
+                const SizedBox(height: 10),
+                Text(
+                  game.title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(game.icon, size: 44, color: Colors.white),
-                  const SizedBox(height: 12),
-                  Text(
-                    game.title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
             ),
           ),
         ),

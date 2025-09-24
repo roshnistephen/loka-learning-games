@@ -11,7 +11,7 @@ class _WelcomePageState extends State<WelcomePage>
     with TickerProviderStateMixin {
   late final AnimationController _bgController;
   late final AnimationController _pulseController;
-  final player = AudioPlayer(); // ✅ Audio player instance
+  final player = AudioPlayer();
 
   @override
   void initState() {
@@ -30,7 +30,7 @@ class _WelcomePageState extends State<WelcomePage>
   void dispose() {
     _bgController.dispose();
     _pulseController.dispose();
-    player.dispose(); // ✅ Dispose player
+    player.dispose();
     super.dispose();
   }
 
