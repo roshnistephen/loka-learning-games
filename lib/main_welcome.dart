@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:confetti/confetti.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 class WelcomePage extends StatefulWidget {
@@ -12,7 +11,6 @@ class _WelcomePageState extends State<WelcomePage>
     with TickerProviderStateMixin {
   late final AnimationController _bgController;
   late final AnimationController _pulseController;
-  late final ConfettiController _confettiController;
   final player = AudioPlayer(); // ✅ Audio player instance
 
   @override
@@ -26,16 +24,12 @@ class _WelcomePageState extends State<WelcomePage>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
-    _confettiController = ConfettiController(
-      duration: const Duration(seconds: 1),
-    );
   }
 
   @override
   void dispose() {
     _bgController.dispose();
     _pulseController.dispose();
-    _confettiController.dispose();
     player.dispose(); // ✅ Dispose player
     super.dispose();
   }
@@ -104,7 +98,6 @@ class _WelcomePageState extends State<WelcomePage>
                         ),
                       ),
                       onPressed: () async {
-                        _confettiController.play();
                         await player.play(AssetSource('sounds/success.mp3'));
                         Future.delayed(const Duration(milliseconds: 900), () {
                           Navigator.pushNamed(context, '/games');
@@ -117,18 +110,6 @@ class _WelcomePageState extends State<WelcomePage>
                 ],
               ),
             ),
-          ),
-          ConfettiWidget(
-            confettiController: _confettiController,
-            blastDirectionality: BlastDirectionality.explosive,
-            shouldLoop: false,
-            colors: [
-              Colors.pink,
-              Colors.yellow,
-              Colors.blue,
-              Colors.green,
-              Colors.orange,
-            ],
           ),
         ],
       ),

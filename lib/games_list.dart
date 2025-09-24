@@ -22,6 +22,12 @@ class GamesListPlaceholder extends StatelessWidget {
       color: Color(0x0FFFA8D9),
       icon: Icons.abc_sharp,
     ),
+    _Game(
+      title: 'Counting Flashcards',
+      route: '/counting-flashcard',
+      color: Color(0xFFB39DDB),
+      icon: Icons.calculate,
+    ),
   ];
 
   @override

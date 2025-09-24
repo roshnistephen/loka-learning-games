@@ -4,6 +4,7 @@ import 'games_list.dart';
 import 'games/baloon_game/baloon_game_page.dart';
 import 'main_welcome.dart';
 import 'games/letter_screen_game/letter_screen_game_page.dart';
+import 'games/counting_flashcard/counting_flashcard_page.dart';
 
 void main() => runApp(const LokaApp());
 
@@ -21,6 +22,7 @@ class LokaApp extends StatelessWidget {
         '/baloon-game': (ctx) => BalloonGamePage(),
         '/letter-game': (ctx) => LetterScreen(),
         '/plank-game': (ctx) => PlankTowerPage(),
+        '/counting-flashcard': (ctx) => const CountingFlashcardPage(),
       },
       initialRoute: '/',
     );
