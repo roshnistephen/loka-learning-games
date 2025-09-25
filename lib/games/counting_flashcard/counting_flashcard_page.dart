@@ -15,9 +15,8 @@ class _CountingFlashcardPageState extends State<CountingFlashcardPage> {
   int? dropped;
   final random = Random();
 
-  final FlutterTts flutterTts = FlutterTts(); // 🔉 TTS instance
+  final FlutterTts flutterTts = FlutterTts();
 
-  // 🎨 Background gradients
   final List<List<Color>> levelBackgrounds = [
     [Colors.lightBlue, Colors.blueAccent],
     [Colors.yellowAccent, Colors.orange],
@@ -27,7 +26,6 @@ class _CountingFlashcardPageState extends State<CountingFlashcardPage> {
   ];
   late List<Color> currentBackground;
 
-  // 🎯 Object pool (fruits, vehicles, animals)
   final List<String> objectPool = [
     "🍎",
     "🍌",
@@ -58,13 +56,12 @@ class _CountingFlashcardPageState extends State<CountingFlashcardPage> {
   }
 
   void _generateNewQuestion() {
-    int count = random.nextInt(10) + 1; // 1–10 objects
+    int count = random.nextInt(5) + 1; // 1–5 objects
     String chosen = objectPool[random.nextInt(objectPool.length)];
-    objects = List.generate(count, (_) => chosen); // all same object
+    objects = List.generate(count, (_) => chosen);
     answer = count;
     dropped = null;
 
-    // pick a random gradient for background
     currentBackground =
         levelBackgrounds[random.nextInt(levelBackgrounds.length)];
 
@@ -161,7 +158,6 @@ class _CountingFlashcardPageState extends State<CountingFlashcardPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Flashcard with objects
             Card(
               elevation: 4,
               shape: RoundedRectangleBorder(
@@ -169,8 +165,10 @@ class _CountingFlashcardPageState extends State<CountingFlashcardPage> {
               ),
               child: Padding(
                 padding: const EdgeInsets.all(20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
                   children: objects
                       .map(
                         (o) => Padding(
@@ -188,7 +186,6 @@ class _CountingFlashcardPageState extends State<CountingFlashcardPage> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            // Drop zone
             DragTarget<int>(
               builder: (context, candidate, rejected) {
                 return Container(
@@ -214,7 +211,7 @@ class _CountingFlashcardPageState extends State<CountingFlashcardPage> {
               onAccept: (value) {
                 setState(() => dropped = value);
                 if (value == answer) {
-                  _speakResult(); // 🔉 Speak feedback
+                  _speakResult();
                   Future.delayed(
                     const Duration(seconds: 2),
                     _generateNewQuestion,
@@ -223,7 +220,6 @@ class _CountingFlashcardPageState extends State<CountingFlashcardPage> {
               },
             ),
             const SizedBox(height: 40),
-            // Draggable number options
             Wrap(
               spacing: 20,
               children: _getOptions().map((num) {
@@ -244,7 +240,7 @@ class _CountingFlashcardPageState extends State<CountingFlashcardPage> {
   List<int> _getOptions() {
     final opts = {answer};
     while (opts.length < 3) {
-      opts.add(random.nextInt(10) + 1); // 1–10 range
+      opts.add(random.nextInt(5) + 1); // 1–5 range
     }
     return opts.toList()..shuffle();
   }
