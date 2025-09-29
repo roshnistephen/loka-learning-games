@@ -18,6 +18,7 @@ dependencies:
   audioplayers: ^6.1.0
   confetti: ^0.8.0
   shared_preferences: ^2.2.3
+  rive: ^0.13.0
 
 dev_dependencies:
   flutter_test:
